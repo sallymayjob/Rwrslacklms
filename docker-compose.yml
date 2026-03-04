@@ -41,7 +41,6 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - ./workflows:/workflows:ro
-      - ./slack_post_ack_routing.workflow.json:/workflows/slack_post_ack_routing.workflow.json:ro
     depends_on:
       postgres:
         condition: service_healthy
