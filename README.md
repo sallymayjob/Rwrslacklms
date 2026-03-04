@@ -16,6 +16,16 @@ This repo is ready to deploy as a **single Git-link install** in Hostinger Docke
    - Optional but recommended: `N8N_HOST`, `N8N_PROTOCOL`, `N8N_EDITOR_BASE_URL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`
 6. Deploy. Hostinger will run the stack and expose n8n on port `5678`.
 
+### Fix for "This site can't be reached" (ERR_CONNECTION_TIMED_OUT)
+
+If your browser times out when opening your server IP/domain, set these variables to match your public host:
+
+- `N8N_HOST=0.0.0.0`
+- `N8N_EDITOR_BASE_URL=http://<your-public-host-or-ip>:5678`
+- `WEBHOOK_URL=http://<your-public-host-or-ip>:5678`
+
+`N8N_HOST=0.0.0.0` ensures n8n listens on all interfaces in the container so Hostinger can publish port `5678` externally.
+
 ## Are all workflows imported automatically?
 
 Yes. On first container start, n8n imports every `*.json` workflow from:
