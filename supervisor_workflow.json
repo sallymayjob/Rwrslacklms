@@ -1,0 +1,139 @@
+{
+  "name": "Slack Supervisor Router",
+  "nodes": [
+    {
+      "id": "Webhook_Slack_Inbound",
+      "name": "Webhook Slack Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "path": "slack/supervisor",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "Supervisor_Router",
+      "name": "Supervisor Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "parameters": {
+        "mode": "rules",
+        "rules": [
+          {
+            "operation": "equal",
+            "value1": "={{$json.body?.type || $json.type || ''}}",
+            "value2": "url_verification"
+          }
+        ],
+        "fallbackOutput": 1
+      }
+    },
+    {
+      "id": "Normalize_Challenge",
+      "name": "Normalize Challenge",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "parameters": {
+        "mode": "manual",
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "type",
+              "value": "challenge"
+            },
+            {
+              "name": "challenge",
+              "value": "={{$json.body?.challenge || $json.challenge || ''}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "Respond_Challenge",
+      "name": "Respond Challenge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json.challenge}}",
+        "responseCode": 200,
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "Ack_Slash_And_Events",
+      "name": "Ack Slash And Events",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"ok\"}",
+        "responseCode": 200,
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Slack Inbound": {
+      "main": [
+        [
+          {
+            "node": "Supervisor Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supervisor Router": {
+      "main": [
+        [
+          {
+            "node": "Normalize Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ack Slash And Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Challenge": {
+      "main": [
+        [
+          {
+            "node": "Respond Challenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
