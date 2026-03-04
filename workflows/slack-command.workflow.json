@@ -1,0 +1,114 @@
+{
+  "name": "Slack Command Workflow (Sanitized)",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Slack Command Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        280
+      ],
+      "parameters": {
+        "path": "slack-command",
+        "httpMethod": "POST"
+      },
+      "disabled": false
+    },
+    {
+      "id": "2",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        480
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3",
+      "name": "Redacted Sample Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        460,
+        280
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "name": "team_id",
+              "value": "TXXXX",
+              "type": "string"
+            },
+            {
+              "name": "user_id",
+              "value": "UXXXX",
+              "type": "string"
+            },
+            {
+              "name": "response_url",
+              "value": "https://hooks.slack.com/commands/...REDACTED",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "Code (No Secrets)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        280
+      ],
+      "parameters": {
+        "jsCode": "const payload = $json;\nreturn [{ json: {\n  team_id: payload.team_id ?? 'TXXXX',\n  user_id: payload.user_id ?? 'UXXXX',\n  response_url: payload.response_url ?? 'https://hooks.slack.com/commands/...REDACTED'\n}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Slack Command Webhook": {
+      "main": [
+        [
+          {
+            "node": "Redacted Sample Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Redacted Sample Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redacted Sample Payload": {
+      "main": [
+        [
+          {
+            "node": "Code (No Secrets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "sanitized-template-v1"
+}

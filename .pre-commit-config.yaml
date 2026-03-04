@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: validate-workflow-exports
+        name: Validate workflow exports for redacted Slack data
+        entry: python3 scripts/validate_workflow_exports.py
+        language: system
+        pass_filenames: false

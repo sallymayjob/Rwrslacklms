@@ -12,3 +12,10 @@ DEEP lessons remain parser-compatible by keeping the same canonical pattern and 
 
 Legacy IDs such as `M01-W00-DEEP` are accepted by parsing and submit validation, then normalized
 to canonical IDs for routing/reporting.
+Command routing and agent workflow mapping for 12 supported slash commands.
+
+## Validate command map
+
+```bash
+node tests/commandMap.test.js
+```
