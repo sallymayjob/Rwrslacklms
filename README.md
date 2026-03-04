@@ -1,5 +1,13 @@
 # Rwrslacklms
 
+## Backup Apps Script example
+
+See [`backup/doPost.gs`](backup/doPost.gs) for an updated `doPost` snippet that:
+
+- uses RFC-4180-safe CSV escaping via `toCsvCell(value)`
+- maps every header/data cell through `toCsvCell` before `join(',')`
+- preserves line breaks safely with `\r\n` row delimiters
+- writes backups as UTF-8 and includes a restore verification note (sample import test)
 ## n8n Supervisor Webhook — How It Works
 
 When Slack calls your n8n supervisor webhook, treat **authentication and freshness** as mandatory checks before any business logic executes.
