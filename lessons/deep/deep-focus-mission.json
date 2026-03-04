@@ -1,0 +1,14 @@
+{
+  "lesson_id": "deep-focus-mission",
+  "tier": "DEEP",
+  "mission": {
+    "title": "DEEP Focus Mission",
+    "duration_minutes": 14,
+    "duration_label": "~14 min"
+  },
+  "compliance": {
+    "policy_version": "2026.03",
+    "status": "compliant",
+    "updated_reason": "Revised from 20 to 14 minutes to satisfy DEEP tier '<15 min' source-of-truth limit."
+  }
+}
