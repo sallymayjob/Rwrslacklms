@@ -38,6 +38,10 @@ services:
       WEBHOOK_URL: ${WEBHOOK_URL:-http://localhost:5678}
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-change-me}
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-UTC}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/workflows:ro
+      - ./slack_post_ack_routing.workflow.json:/workflows/slack_post_ack_routing.workflow.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,7 +87,18 @@ services:
           process.exit(1);
         })();
         "
+        && if [ ! -f /home/node/.n8n/.workflows_imported ]; then
+             for workflow in /workflows/*.json; do
+               [ -e "$workflow" ] || continue
+               echo "Importing workflow: $workflow"
+               n8n import:workflow --input="$workflow"
+             done
+             touch /home/node/.n8n/.workflows_imported
+           else
+             echo "Workflow import already completed. Skipping."
+           fi
         && exec n8n start
 
 volumes:
   postgres_data:
+  n8n_data:

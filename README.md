@@ -14,16 +14,23 @@ This repo is ready to deploy as a **single Git-link install** in Hostinger Docke
    - `POSTGRES_DB`
    - `N8N_ENCRYPTION_KEY`
    - Optional but recommended: `N8N_HOST`, `N8N_PROTOCOL`, `N8N_EDITOR_BASE_URL`, `WEBHOOK_URL`, `GENERIC_TIMEZONE`
-6. Deploy. Hostinger will build/run the stack and expose n8n on port `5678`.
+6. Deploy. Hostinger will run the stack and expose n8n on port `5678`.
 
-You can start from the provided `.env.example` values and replace secrets before production use.
+## Are all workflows imported automatically?
+
+Yes. On first container start, n8n imports every `*.json` workflow from:
+
+- `./workflows/`
+- `./slack_post_ack_routing.workflow.json`
+
+After a successful first import, a marker file (`/home/node/.n8n/.workflows_imported`) is written in the persistent `n8n_data` volume, so workflows are not imported again on every restart.
 
 ## What gets deployed
 
-- `postgres` (PostgreSQL 16)
-- `n8n` (latest)
+- `postgres` (PostgreSQL 16, persistent volume: `postgres_data`)
+- `n8n` (latest, persistent volume: `n8n_data`)
 
-The compose file already includes startup waiting logic so n8n only starts once Postgres is reachable.
+The compose file includes startup waiting logic so n8n starts only after Postgres is reachable.
 
 ## Verification updates
 
