@@ -1,21 +1,17 @@
 # Rwrslacklms
 
-## Lesson ID convention
+## Mission duration compliance
 
-Canonical lesson IDs use this format:
+This repository enforces mission duration policy by tier via:
 
-- `M##-W##-L##`
+- Source of truth policy: `policy/mission_duration_policy.json`
+- QA rule: `pipeline/qa/check_mission_duration.py`
+- Verdict metadata output: `data/qa/mission_duration_verdicts.json`
 
-DEEP lessons remain parser-compatible by keeping the same canonical pattern and storing
-`lesson_type: DEEP` in lesson metadata. For DEEP lessons, the canonical lesson number is `00`
-(e.g. `M01-W00-L00`).
-
-Legacy IDs such as `M01-W00-DEEP` are accepted by parsing and submit validation, then normalized
-to canonical IDs for routing/reporting.
-Command routing and agent workflow mapping for 12 supported slash commands.
-
-## Validate command map
+Run:
 
 ```bash
-node tests/commandMap.test.js
+python3 pipeline/qa/check_mission_duration.py
 ```
+
+The command exits non-zero when any lesson mission exceeds its tier limit.
