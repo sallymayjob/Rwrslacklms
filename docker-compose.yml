@@ -1,96 +1,80 @@
 services:
-  traefik:
-    image: traefik:v3.1
-    restart: always
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --certificatesresolvers.mytlschallenge.acme.tlschallenge=true
-      - --certificatesresolvers.mytlschallenge.acme.email=${SSL_EMAIL}
-      - --certificatesresolvers.mytlschallenge.acme.storage=/letsencrypt/acme.json
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - traefik_data:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
-  ollama:
-    image: ollama/ollama:latest
-    restart: always
-    volumes:
-      - ollama_data:/root/.ollama
-    ports:
-      - "127.0.0.1:11434:11434"
-
   postgres:
-    image: postgres:16
-    restart: always
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: n8n
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: n8n
+      POSTGRES_USER: ${POSTGRES_USER:-n8n}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U n8n -d n8n"]
-      interval: 10s
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-n8n} -d ${POSTGRES_DB:-n8n} -h 127.0.0.1 || exit 1",
+        ]
+      interval: 5s
       timeout: 5s
       retries: 10
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.pgadmin.rule=Host(`pgadmin.${DOMAIN_NAME}`)
-      - traefik.http.routers.pgadmin.entrypoints=websecure
-      - traefik.http.routers.pgadmin.tls.certresolver=mytlschallenge
-      - traefik.http.services.pgadmin.loadbalancer.server.port=80
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      start_period: 10s
 
   n8n:
-    image: docker.n8n.io/n8nio/n8n:latest
-    restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.n8n.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`)
-      - traefik.http.routers.n8n.entrypoints=websecure
-      - traefik.http.routers.n8n.tls.certresolver=mytlschallenge
-      - traefik.http.services.n8n.loadbalancer.server.port=5678
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
     environment:
-      N8N_HOST: ${SUBDOMAIN}.${DOMAIN_NAME}
-      N8N_PORT: 5678
-      N8N_PROTOCOL: https
-      WEBHOOK_URL: https://${SUBDOMAIN}.${DOMAIN_NAME}/
-      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
-      N8N_PROXY_HOPS: 1
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_DATABASE: n8n
-      DB_POSTGRESDB_USER: n8n
-      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - ./local-files:/files
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-n8n}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-n8n}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Fallback for compose implementations that ignore depends_on conditions.
+    command:
+      - /bin/sh
+      - -c
+      - |
+        node -e "
+        const net = require('net');
+        const host = process.env.DB_POSTGRESDB_HOST || 'postgres';
+        const port = Number(process.env.DB_POSTGRESDB_PORT || 5432);
+        const maxAttempts = 30;
+        const delayMs = 2000;
+
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        (async () => {
+          for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            const ok = await new Promise((resolve) => {
+              const socket = net.createConnection({ host, port });
+              socket.once('connect', () => {
+                socket.destroy();
+                resolve(true);
+              });
+              socket.once('error', () => resolve(false));
+              socket.setTimeout(2000, () => {
+                socket.destroy();
+                resolve(false);
+              });
+            });
+
+            if (ok) {
+              console.log(`Postgres reachable on ${host}:${port} (attempt ${attempt}).`);
+              process.exit(0);
+            }
+
+            console.log(`Waiting for Postgres on ${host}:${port} (attempt ${attempt}/${maxAttempts})...`);
+            await wait(delayMs);
+          }
+
+          console.error(`Postgres not reachable on ${host}:${port} after ${maxAttempts} attempts.`);
+          process.exit(1);
+        })();
+        "
+        && exec n8n start
 
 volumes:
-  traefik_data:
-  ollama_data:
-  n8n_data:
   postgres_data:
-  pgadmin_data:
