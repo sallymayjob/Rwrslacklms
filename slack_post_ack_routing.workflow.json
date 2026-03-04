@@ -1,0 +1,426 @@
+{
+  "name": "Slack LMS Post-Ack Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "slack-lms",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "Webhook_Slack_Inbound",
+      "name": "Webhook Slack Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.type === 'challenge' ? { challenge: $json.challenge } : { ok: true, message: 'acknowledged' } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "Respond_Immediately",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "output": "={{ $json.type === 'challenge' ? 0 : $json.command ? 1 : $json.payload ? 2 : 3 }}",
+        "options": {
+          "fallbackOutput": 3
+        }
+      },
+      "id": "Switch_Payload_Type",
+      "name": "Switch Payload Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind",
+              "name": "kind",
+              "value": "command",
+              "type": "string"
+            },
+            {
+              "id": "team_id",
+              "name": "team_id",
+              "value": "={{ $json.team_id }}",
+              "type": "string"
+            },
+            {
+              "id": "channel_id",
+              "name": "channel_id",
+              "value": "={{ $json.channel_id }}",
+              "type": "string"
+            },
+            {
+              "id": "user_id",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "command",
+              "name": "command",
+              "value": "={{ $json.command }}",
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "response_url",
+              "name": "response_url",
+              "value": "={{ $json.response_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "keepOnlySet": true,
+        "options": {}
+      },
+      "id": "Map_Command_Fields",
+      "name": "Map Command Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        280
+      ],
+      "disabled": false
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.command }}",
+        "rules": {
+          "values": [
+            {
+              "operation": "equal",
+              "value2": "/learn"
+            },
+            {
+              "operation": "equal",
+              "value2": "/submit"
+            },
+            {
+              "operation": "equal",
+              "value2": "/status"
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "Switch_Command_Map",
+      "name": "Switch Command Map",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "route",
+              "value": "learn",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Route_Learn",
+      "name": "Route /learn",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "route",
+              "value": "submit",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Route_Submit",
+      "name": "Route /submit",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "route",
+              "value": "status",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Route_Status",
+      "name": "Route /status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "route",
+              "value": "unsupported_command",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Route_Unsupported_Command",
+      "name": "Route Unsupported Command",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "kind",
+              "value": "interactive",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "value": "={{ JSON.parse($json.payload) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "keepOnlySet": true,
+        "options": {}
+      },
+      "id": "Map_Interactive_Payload",
+      "name": "Map Interactive Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "kind",
+              "value": "event",
+              "type": "string"
+            },
+            {
+              "name": "event",
+              "value": "={{ $json.event }}",
+              "type": "object"
+            }
+          ]
+        },
+        "keepOnlySet": true,
+        "options": {}
+      },
+      "id": "Map_Event_Payload",
+      "name": "Map Event Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "kind",
+              "value": "challenge",
+              "type": "string"
+            },
+            {
+              "name": "challenge",
+              "value": "={{ $json.challenge }}",
+              "type": "string"
+            }
+          ]
+        },
+        "keepOnlySet": true,
+        "options": {}
+      },
+      "id": "Map_Challenge_Payload",
+      "name": "Map Challenge Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Slack Inbound": {
+      "main": [
+        [
+          {
+            "node": "Respond Immediately",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch Payload Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Payload Type": {
+      "main": [
+        [
+          {
+            "node": "Map Challenge Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Command Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Interactive Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Event Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Command Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch Command Map",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Command Map": {
+      "main": [
+        [
+          {
+            "node": "Route /learn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route /submit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route /status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Unsupported Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2d2f5c80-b95d-4a36-8eb9-cfef4b232444",
+  "id": "SlackLmsPostAckRouting",
+  "tags": []
+}
