@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LMS + Slack Supervisor Guide</title>
+  </head>
+  <body>
+    <h1>LMS + Slack Supervisor Integration Guide</h1>
+
+    <h2>Runtime configuration</h2>
+    <p>
+      Use deployment-time environment values instead of hardcoded production
+      endpoints and credentials.
+    </p>
+
+    <pre><code>{
+  "webhookUrl": "{{N8N_WEBHOOK_URL}}",
+  "alertEmail": "{{LMS_ALERT_EMAIL}}",
+  "backupFolderId": "{{BACKUP_FOLDER_ID}}",
+  "slackBotToken": "{{SLACK_BOT_TOKEN}}"
+}</code></pre>
+
+    <h2>Example shell configuration</h2>
+    <pre><code>export N8N_WEBHOOK_URL="{{N8N_WEBHOOK_URL}}"
+export LMS_ALERT_EMAIL="{{LMS_ALERT_EMAIL}}"
+export BACKUP_FOLDER_ID="{{BACKUP_FOLDER_ID}}"
+export SLACK_BOT_TOKEN="{{SLACK_BOT_TOKEN}}"</code></pre>
+  </body>
+</html>
