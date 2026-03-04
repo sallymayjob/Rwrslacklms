@@ -75,15 +75,15 @@ services:
             });
 
             if (ok) {
-              console.log(`Postgres reachable on ${host}:${port} (attempt ${attempt}).`);
+              console.log(`Postgres reachable on $${host}:$${port} (attempt $${attempt}).`);
               process.exit(0);
             }
 
-            console.log(`Waiting for Postgres on ${host}:${port} (attempt ${attempt}/${maxAttempts})...`);
+            console.log(`Waiting for Postgres on $${host}:$${port} (attempt $${attempt}/$${maxAttempts})...`);
             await wait(delayMs);
           }
 
-          console.error(`Postgres not reachable on ${host}:${port} after ${maxAttempts} attempts.`);
+          console.error(`Postgres not reachable on $${host}:$${port} after $${maxAttempts} attempts.`);
           process.exit(1);
         })();
         "
