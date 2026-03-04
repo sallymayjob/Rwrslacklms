@@ -1,17 +1,16 @@
 # Rwrslacklms
 
-## Mission duration compliance
+Lesson publish-readiness validation utilities.
 
-This repository enforces mission duration policy by tier via:
+## What is included
 
-- Source of truth policy: `policy/mission_duration_policy.json`
-- QA rule: `pipeline/qa/check_mission_duration.py`
-- Verdict metadata output: `data/qa/mission_duration_verdicts.json`
+- Required metadata definition for `Ready` lessons.
+- Validation checks in router/export and QA sync phases.
+- Backfill helpers for existing null metadata.
+- Weekly data-quality report generator for incomplete lessons.
 
-Run:
+## Run tests
 
 ```bash
-python3 pipeline/qa/check_mission_duration.py
+python -m unittest discover -s tests
 ```
-
-The command exits non-zero when any lesson mission exceeds its tier limit.
