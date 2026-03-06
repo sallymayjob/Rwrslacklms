@@ -1,0 +1,11 @@
+{
+  "policy_version": "2026.03",
+  "source_of_truth": "mission_duration_policy.json",
+  "notes": "DEEP missions must remain under 15 minutes unless an explicit policy version updates the tier limit.",
+  "tier_limits_minutes": {
+    "FOUNDATION": 10,
+    "CORE": 12,
+    "DEEP": 15
+  },
+  "comparison": "strictly_less_than"
+}
